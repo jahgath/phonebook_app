@@ -22,7 +22,7 @@ class _MyHomePageState extends State<MyHomePage> {
       };
 
       documentReference.setData(todos).whenComplete(() {
-        print("$ todoTitle created");
+        print("$todoTitle created");
       });
   }
 
