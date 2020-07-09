@@ -1,6 +1,6 @@
 # phone_app
 
-A new Flutter project.
+A new Flutter project. IOS support not yet implemented. 
 
 ## Getting Started
 
