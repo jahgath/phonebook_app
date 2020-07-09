@@ -1,6 +1,8 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:phone_app/UI/theme_switch/toggle_theme.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:phone_app/services/crud.dart';
+
 
 class MyHomePage extends StatefulWidget {
   MyHomePage({Key key, this.title}) : super(key: key);
@@ -11,34 +13,96 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  String todoTitle = "";
+  String carModel;
+  String carColor;
 
-  createTodos(){
-    DocumentReference documentReference = 
-      Firestore.instance.collection("MyTodos").document( todoTitle);
+  QuerySnapshot cars;
+  crudMethods crudObj = new crudMethods();
 
-      Map<String,String> todos = {
-        "todoTitle": todoTitle
-      };
-
-      documentReference.setData(todos).whenComplete(() {
-        print("$todoTitle created");
-      });
+  Future<bool> addDialog(BuildContext context) async{
+    return showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context){
+        return AlertDialog(
+          title: Text('Add Data', style: TextStyle(fontSize: 15.0),),
+          content: Column(
+            children: [
+              TextField(
+                decoration: InputDecoration(hintText: 'Enter Car Name'),
+                onChanged: (value){
+                  this.carModel = value;
+                },
+              ),
+              SizedBox(height: 5,),
+              TextField(
+                decoration: InputDecoration(hintText: 'Enter Car Color'),
+                onChanged: (value){
+                  this.carColor = value;
+                },
+              ),
+            ],
+          ),
+          actions: [
+            FlatButton(
+              child: Text('add'),
+              textColor: Colors.blue,
+              onPressed: (){
+                Navigator.of(context).pop();
+                Map<String,dynamic> carData = {
+                  "carName": this.carModel,
+                  "carColor": this.carColor
+                };
+                crudObj.addData(carData).then((result){
+                  dialogTrigger(context);
+                }).catchError((e){
+                  print(e);
+                });
+              },
+            )
+          ],
+        );
+      }
+    );
   }
 
-  deleteTodos(item){
-    DocumentReference documentReference = 
-      Firestore.instance.collection("MyTodos").document(item);
-
-      documentReference.delete().whenComplete(() {
-        print("deleted");
-      });
+  Future<bool> dialogTrigger(BuildContext context) async{
+    return showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context){
+        return AlertDialog(
+          title: Text('Job Done', style: TextStyle(fontSize: 15)),
+          content:  Text('Added'),
+          actions: [
+            FlatButton(
+              child: Text('Alright'),
+              textColor: Colors.blue,
+              onPressed: (){
+                Navigator.of(context).pop();
+              },
+            )
+          ],
+        );
+      }
+    );
   }
+
+  @override
+  void initState() {
+    crudObj.getData().then((results){
+      setState(() {
+        cars = results;
+      });
+    });
+  }
+
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        elevation: 0,
         title: Text("PhoneBook App"),
         leading: IconButton(
           icon: Icon(Icons.lightbulb_outline),
@@ -46,62 +110,43 @@ class _MyHomePageState extends State<MyHomePage> {
             changeBrightness(context);
           },
         ),
-      ),
-      body: StreamBuilder(stream: Firestore.instance.collection("MyTodos").snapshots(),builder: (context,snapshots){
-        return ListView.builder(
-          itemCount: snapshots.data.documents.length,
-          itemBuilder: (BuildContext context, int index) {
-            DocumentSnapshot documentSnapshot = snapshots.data.documents[index];
-            return Dismissible(
-              onDismissed: (direction){
-                deleteTodos(documentSnapshot['todoTitle']);
-              },
-              key: Key(documentSnapshot['todoTitle']),
-              child: Card(
-                margin: EdgeInsets.all(8),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8)),
-                child: ListTile(
-                  title: Text(documentSnapshot["todoTitle"]),
-                  trailing: IconButton(
-                    icon: Icon(Icons.delete),
-                    onPressed: () {
-                     deleteTodos(documentSnapshot["todoTitle"]);
-                    },
-                  ),
-                ),
-              ),
-            );
-          });
-      },),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          showDialog(
-              context: context,
-              builder: (BuildContext context) {
-                return AlertDialog(
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8)),
-                  title: Text("Add todolist"),
-                  content: TextField(
-                    onChanged: (String value) {
-                       todoTitle = value;
-                    },
-                  ),
-                  actions: [
-                    FlatButton(
-                      onPressed: () {
-                        createTodos();
-                        Navigator.of(context).pop();
-                      },
-                      child: Text("Add"),
-                    )
-                  ],
-                );
+        actions: [
+          IconButton(
+            icon: Icon(Icons.add),
+            onPressed: (){
+              addDialog(context);
+            },
+          ),
+          IconButton(
+            icon: Icon(Icons.refresh),
+            onPressed: (){
+              crudObj.getData().then((results){
+                setState(() {
+                  cars = results;
+                });
               });
-        },
-        child: const Icon(Icons.add),
+            },
+          )
+        ],
       ),
-    );
+      body: _carList() );
+  }
+
+  Widget _carList(){
+    if(cars != null){
+      return ListView.builder(
+        itemCount: cars.documents.length,
+        padding: EdgeInsets.all(5),
+        itemBuilder: (context, index){
+          return new ListTile(
+            title: Text(cars.documents[index].data['carName']),
+            subtitle: Text(cars.documents[index].data['carColor']),
+          );
+        },
+      );
+    }
+    else{
+      return Text('Loading, Please wait');
+    }
   }
 }
