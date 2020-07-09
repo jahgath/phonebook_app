@@ -6,6 +6,8 @@ class Consts {
 
   static const double padding = 16.0;
   static const double avatarRadius = 66.0;
+  static const Icon iconcontact = Icon(Icons.contacts);
+  static const Icon iconphone = Icon(Icons.phone);
 }
 
 class Dialogs {
@@ -52,12 +54,19 @@ class Dialogs {
                         ),
                       ),
                       SizedBox(height: 16.0),
-                      Text(
-                        number,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 16.0,
-                        ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Consts.iconphone,
+                          SizedBox(width: 10,),
+                          Text(
+                            number,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 16.0,
+                            ),
+                          ),
+                        ],
                       ),
                       SizedBox(height: 16.0),
                       Text(
@@ -103,41 +112,44 @@ class Dialogs {
     return showDialog(
         context: context,
         builder: (BuildContext context) {
-          return Container(
-            child: AlertDialog(
+          return  AlertDialog(
               title: Text(
-                'Add Data',
+                'Add Contact',
                 style: TextStyle(fontSize: 15.0),
               ),
-              content: Column(
-                children: [
-                  TextField(
-                    decoration: InputDecoration(hintText: 'Enter contact Name'),
-                    onChanged: (value) {
-                      this.contactName = value;
-                    },
-                  ),
-                  SizedBox(
-                    height: 5,
-                  ),
-                  TextField(
-                    keyboardType: TextInputType.number,
-                    decoration:
-                        InputDecoration(hintText: 'Enter contact Number'),
-                    onChanged: (value) {
-                      this.contactNumber = value;
-                    },
-                  ),
-                  SizedBox(
-                    height: 5,
-                  ),
-                  TextField(
-                    decoration: InputDecoration(hintText: 'Additional Info'),
-                    onChanged: (value) {
-                      this.contactInfo = value;
-                    },
-                  ),
-                ],
+              content: Container(
+                width: MediaQuery.of(context).size.width,
+                height: MediaQuery.of(context).size.height/2,
+                child: Column(
+                  children: [
+                    TextField(
+                      decoration: InputDecoration(icon: Consts.iconcontact, hintText: 'Enter Contact Name'),
+                      onChanged: (value) {
+                        this.contactName = value;
+                      },
+                    ),
+                    SizedBox(
+                      height: 5,
+                    ),
+                    TextField(
+                      keyboardType: TextInputType.number,
+                      decoration:
+                          InputDecoration(icon: Consts.iconphone, hintText: 'Enter Contact Number'),
+                      onChanged: (value) {
+                        this.contactNumber = value;
+                      },
+                    ),
+                    SizedBox(
+                      height: 5,
+                    ),
+                    TextField(
+                      decoration: InputDecoration(hintText: 'Additional Info'),
+                      onChanged: (value) {
+                        this.contactInfo = value;
+                      },
+                    ),
+                  ],
+                ),
               ),
               actions: [
                 FlatButton(
@@ -158,7 +170,6 @@ class Dialogs {
                   },
                 )
               ],
-            ),
           );
         });
   }
@@ -169,34 +180,41 @@ class Dialogs {
         builder: (BuildContext context) {
           return AlertDialog(
             title: Text(
-              'Update Data',
+              'Update Contact',
               style: TextStyle(fontSize: 15.0),
             ),
-            content: Column(
-              children: [
-                TextField(
-                  decoration: InputDecoration(hintText: 'Enter contact Name'),
-                  onChanged: (value) {
-                    this.contactName = value;
-                  },
-                ),
-                SizedBox(
-                  height: 5,
-                ),
-                TextField(
-                  keyboardType: TextInputType.number,
-                  decoration: InputDecoration(hintText: 'Enter contact Number'),
-                  onChanged: (value) {
-                    this.contactNumber = value;
-                  },
-                ),
-                TextField(
-                  decoration: InputDecoration(hintText: 'Enter contact Info'),
-                  onChanged: (value) {
-                    this.contactInfo = value;
-                  },
-                ),
-              ],
+            content: Container(
+              width: MediaQuery.of(context).size.width,
+                height: MediaQuery.of(context).size.height/2,
+              child: Column(
+                children: [
+                  TextField(
+                    decoration: InputDecoration(icon: Consts.iconcontact,hintText: 'Enter Contact Name'),
+                    onChanged: (value) {
+                      this.contactName = value;
+                    },
+                  ),
+                  SizedBox(
+                    height: 5,
+                  ),
+                  TextField(
+                    keyboardType: TextInputType.number,
+                    decoration: InputDecoration(icon: Consts.iconphone,hintText: 'Enter Contact Number'),
+                    onChanged: (value) {
+                      this.contactNumber = value;
+                    },
+                  ),
+                    SizedBox(
+                    height: 5,
+                  ),
+                  TextField(
+                    decoration: InputDecoration(hintText: 'Additional Info'),
+                    onChanged: (value) {
+                      this.contactInfo = value;
+                    },
+                  ),
+                ],
+              ),
             ),
             actions: [
               FlatButton(
