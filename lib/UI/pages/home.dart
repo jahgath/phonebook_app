@@ -1,8 +1,9 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:phone_app/UI/theme_switch/toggle_theme.dart';
 import 'package:phone_app/services/crud.dart';
-
+import 'package:random_color/random_color.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'dialogs.dart';
 
 class MyHomePage extends StatefulWidget {
   MyHomePage({Key key, this.title}) : super(key: key);
@@ -12,141 +13,106 @@ class MyHomePage extends StatefulWidget {
   _MyHomePageState createState() => _MyHomePageState();
 }
 
+RandomColor _randomColor = RandomColor();
+Dialogs dialogs = Dialogs();
+
 class _MyHomePageState extends State<MyHomePage> {
-  String carModel;
-  String carColor;
 
-  QuerySnapshot cars;
+  Stream contacts;
   crudMethods crudObj = new crudMethods();
-
-  Future<bool> addDialog(BuildContext context) async{
-    return showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (BuildContext context){
-        return AlertDialog(
-          title: Text('Add Data', style: TextStyle(fontSize: 15.0),),
-          content: Column(
-            children: [
-              TextField(
-                decoration: InputDecoration(hintText: 'Enter Car Name'),
-                onChanged: (value){
-                  this.carModel = value;
-                },
-              ),
-              SizedBox(height: 5,),
-              TextField(
-                decoration: InputDecoration(hintText: 'Enter Car Color'),
-                onChanged: (value){
-                  this.carColor = value;
-                },
-              ),
-            ],
-          ),
-          actions: [
-            FlatButton(
-              child: Text('add'),
-              textColor: Colors.blue,
-              onPressed: (){
-                Navigator.of(context).pop();
-                Map<String,dynamic> carData = {
-                  "carName": this.carModel,
-                  "carColor": this.carColor
-                };
-                crudObj.addData(carData).then((result){
-                  dialogTrigger(context);
-                }).catchError((e){
-                  print(e);
-                });
-              },
-            )
-          ],
-        );
-      }
-    );
-  }
-
-  Future<bool> dialogTrigger(BuildContext context) async{
-    return showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (BuildContext context){
-        return AlertDialog(
-          title: Text('Job Done', style: TextStyle(fontSize: 15)),
-          content:  Text('Added'),
-          actions: [
-            FlatButton(
-              child: Text('Alright'),
-              textColor: Colors.blue,
-              onPressed: (){
-                Navigator.of(context).pop();
-              },
-            )
-          ],
-        );
-      }
-    );
-  }
 
   @override
   void initState() {
-    crudObj.getData().then((results){
+    crudObj.getData().then((results) {
       setState(() {
-        cars = results;
+        contacts = results;
       });
     });
   }
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        elevation: 0,
-        title: Text("PhoneBook App"),
-        leading: IconButton(
-          icon: Icon(Icons.lightbulb_outline),
-          onPressed: () {
-            changeBrightness(context);
-          },
-        ),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.add),
-            onPressed: (){
-              addDialog(context);
+        appBar: AppBar(
+          elevation: 0,
+          title: Text("PhoneBook App"),
+          leading: IconButton(
+            icon: Icon(Icons.lightbulb_outline),
+            onPressed: () {
+              changeBrightness(context);
             },
           ),
-          IconButton(
-            icon: Icon(Icons.refresh),
-            onPressed: (){
-              crudObj.getData().then((results){
-                setState(() {
-                  cars = results;
+          actions: [
+            IconButton(
+              icon: Icon(Icons.add),
+              onPressed: () {
+                dialogs.addDialog(context);
+              },
+            ),
+            IconButton(
+              icon: Icon(Icons.refresh),
+              onPressed: () {
+                crudObj.getData().then((results) {
+                  setState(() {
+                    contacts = results;
+                  });
                 });
-              });
-            },
-          )
-        ],
-      ),
-      body: _carList() );
+              },
+            )
+          ],
+        ),
+        body: _contactList());
   }
 
-  Widget _carList(){
-    if(cars != null){
-      return ListView.builder(
-        itemCount: cars.documents.length,
-        padding: EdgeInsets.all(5),
-        itemBuilder: (context, index){
-          return new ListTile(
-            title: Text(cars.documents[index].data['carName']),
-            subtitle: Text(cars.documents[index].data['carColor']),
+  Widget _contactList() {
+    if (contacts != null) {
+      return StreamBuilder(
+        stream: contacts,
+        builder: (context, snapshot) {
+          return ListView.separated(
+            separatorBuilder: (context, index) {
+              return Divider();
+            },
+            itemCount: snapshot.data.documents.length,
+            padding: EdgeInsets.all(5),
+            itemBuilder: (context, index) {
+              return new ListTile(
+                title: Text(snapshot.data.documents[index].data['contactName']),
+                subtitle:
+                    Text(snapshot.data.documents[index].data['contactNumber']),
+                onTap: () {
+                  dialogs.customDialog(
+                      snapshot.data.documents[index].data['contactName'],
+                      snapshot.data.documents[index].data['contactNumber'],
+                      snapshot.data.documents[index].data['contactInfo'],
+                      context,
+                      snapshot.data.documents[index].documentID);
+                },
+                leading: CircleAvatar(
+                  backgroundColor: _randomColor.randomColor(),
+                  child: Text(
+                      '${snapshot.data.documents[index].data['contactName'][0]}'),
+                ),
+                trailing: IconButton(
+                  icon: Icon(Icons.delete),
+                  onPressed: () {
+                    crudObj
+                        .deleteData(snapshot.data.documents[index].documentID);
+                  },
+                ),
+              );
+            },
           );
         },
       );
-    }
-    else{
-      return Text('Loading, Please wait');
+    } else {
+      return Center(
+        child: SpinKitRotatingCircle(
+          color: Colors.blue,
+          size: 30.0,
+        ),
+      );
+      ;
     }
   }
 }
